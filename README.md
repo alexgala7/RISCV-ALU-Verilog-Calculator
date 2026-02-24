@@ -1,52 +1,69 @@
 # RISC-V Multi-Cycle Processor Design (Verilog)
 
-This repository contains the hardware implementation of a **32-bit RISC-V compatible processor** using Verilog HDL. The design evolves from a basic ALU to a fully functional multi-cycle CPU capable of executing R-type, Immediate, Load/Store, and Branch instructions.
+Αυτό το repository περιέχει την πλήρη σχεδίαση ενός **32-bit RISC-V συμβατού επεξεργαστή** σε Verilog HDL. Το project εξελίσσεται από τη σχεδίαση βασικών δομικών μονάδων (ALU, Register File) στην υλοποίηση ενός multi-cycle datapath και μιας Μηχανής Πεπερασμένων Καταστάσεων (FSM).
 
+## 📊 Επισκόπηση Εργασίας
 
-## 🚀 Project Overview
+### Άσκηση 1: Arithmetic Logic Unit (ALU) 32-bit
+Σχεδίαση μιας ALU 32-bit με παραμετροποιημένη επιλογή λειτουργιών μέσω του σήματος `alu_op`.
+* **Λειτουργίες:** Υποστηρίζονται αριθμητικές πράξεις (ADD, SUB), λογικές (AND, OR, XOR), ολισθήσεις (SLL, SRL, SRA) και συγκρίσεις (SLT).
+* **Zero Flag:** Έξοδος 1-bit που υποδεικνύει αν το αποτέλεσμα είναι μηδέν (απαραίτητο για BEQ).
+* **Ιδιαιτερότητες:** Υλοποίηση προσημασμένης σύγκρισης και αριθμητικής ολίσθησης με μετατροπή τύπου δεδομένων.
 
-The project is structured into five incremental design stages:
+### Άσκηση 2: Ψηφιακή Αριθμομηχανή (Calculator)
+Ενσωμάτωση της ALU σε ένα κύκλωμα αριθμομηχανής με συσσωρευτή (accumulator) 16-bit.
+* **Accumulator:** 16-bit καταχωρητής με σύγχρονο μηδενισμό (btnu) και ενημέρωση (btnd).
+* **Interface:** Σύνδεση εισόδων (switches) και συσσωρευτή στην ALU μέσω επέκτασης προσήμου (sign extension).
+* **Control:** Υλοποίηση συνδυαστικής λογικής (structural Verilog) στο `calc_enc.v` για την παραγωγή του `alu_op`.
 
-### 1. Arithmetic Logic Unit (ALU)
-A 32-bit ALU designed to support RISC-V operations:
-* **Arithmetic:** ADD, SUB, SLT (Set Less Than).
-* **Logical:** AND, OR, XOR.
-* **Shifts:** Logical Left, Logical Right, Arithmetic Right.
-* **Zero Detection:** Flag for branch operations.
+![Calculator Simulation Waveforms](Simulations/calculator_simulation_waveforms.png)
+*Σχήμα: Κυματομορφή προσομοίωσης της αριθμομηχανής που επαληθεύει την ορθή λειτουργία των πράξεων.*
 
-### 2. Digital Calculator (Ex. 2)
-Integration of the ALU into a hardware calculator featuring:
-* **16-bit Accumulator:** Synchronous reset and update logic.
-* **Structural Control:** Operation encoding using pure logic gates (Structural Verilog).
-* **Sign Extension:** Handling transitions between 16-bit inputs and 32-bit processing.
+### Άσκηση 3: Register File
+Σχεδίαση αρχείου 32 καταχωρητών (32-bit) για τον RISC-V.
+* **Θύρες:** Ταυτόχρονη ανάγνωση από δύο θύρες και εγγραφή σε μία.
+* **Register x0:** Hardwired τιμή 0, μη επιδεκτική αλλαγής.
+* **Προτεραιότητα Εγγραφής:** Μηχανισμός που επιτρέπει την άμεση προώθηση των δεδομένων εγγραφής στις εξόδους ανάγνωσης όταν οι διευθύνσεις ταυτίζονται.
 
-### 3. Register File (Ex. 3)
-Implementation of a `32 x 32-bit` Register File:
-* **Dual Read Ports:** Simultaneous access to `rs1` and `rs2`.
-* **Synchronous Write:** Edge-triggered data storage at `rd`.
-* **Zero Register:** Hardwired `x0` constant at address zero.
+### Άσκηση 4: Datapath Σχεδίαση
+Σύνθεση των μονάδων σε μια ενιαία διαδρομή δεδομένων σύμφωνα με την αρχιτεκτονική RISC-V.
+* **Program Counter (PC):** Λογική ενημέρωσης PC+4 ή Branch Offset.
+* **Immediate Generation:** Υποστήριξη I, S, και B-type εντολών με κατάλληλη επέκταση προσήμου.
+* **Memory Interface:** Διασύνδεση με μνήμες δεδομένων και εντολών.
 
-### 4. Datapath & Control Unit (Ex. 4 & 5)
-The final stages focus on the complete CPU integration:
-* **Datapath:** Wiring the Program Counter (PC), Immediate Generator, Register File, and ALU.
-* **5-Stage FSM:** Implementation of the control logic following the states:
-  1. **IF (Instruction Fetch):** Retrieve instruction from memory.
-  2. **ID (Decode):** Decode fields and read registers.
-  3. **EX (Execute):** Perform ALU operations or address calculation.
-  4. **MEM (Memory Access):** Data memory read/write (LW, SW).
-  5. **WB (Write Back):** Store results back to the Register File.
+### Άσκηση 5: Multi-cycle Control (FSM)
+Υλοποίηση του ελεγκτή 5 σταδίων (Instruction Fetch, Decode, Execute, Memory, Write-Back).
+* **Σήματα Ελέγχου:** Παραγωγή των PCSrc, ALUSrc, MemRead, MemWrite, RegWrite και ALUCtrl.
+* **Παρατήρηση:** Κατά την τελική προσομοίωση του ελεγκτή στο `top_proc.v`, εντοπίστηκαν ζητήματα στη διασύνδεση του WriteBackData και στην ενεργοποίηση του RegWrite, τα οποία επηρεάζουν την πλήρη ολοκλήρωση των εντολών LW/SW.
 
+[Image of a 5-stage FSM state diagram for a processor]
 
-## 🛠️ Instruction Support
-The processor is verified via `top_proc_tb.v` for the following ISA subsets:
-* **R-Type:** `ADD`, `SUB`, `AND`, `OR`, `XOR`, `SLT`, `SLL`, `SRL`, `SRA`.
-* **I-Type:** `ADDI`, `ANDI`, `ORI`, `XORI`, `SLTI`, `SLLI`, `SRLI`, `SRAI`, `LW`.
-* **S-Type:** `SW`.
-* **B-Type:** `BEQ`.
+## 🛠️ Υποστήριξη Εντολών
+Ο επεξεργαστής σχεδιάστηκε για να υποστηρίζει:
+* **R-Type:** ADD, SUB, AND, OR, XOR, SLT, SLL, SRL, SRA.
+* **I-Type:** ADDI, ANDI, ORI, XORI, SLTI, SLLI, SRLI, SRAI, LW.
+* **S-Type:** SW.
+* **B-Type:** BEQ.
 
-## 📂 Structure
-* **`RTL/`**: Core Verilog modules for ALU, RegFile, and Datapath.
-* **`Testbenches/`**: Automated simulation scripts for unit and system testing.
-
----
-*Developed as part of the Digital Systems Design course, ECE AUTh, 2026.*
+## 📂 Δομή Φακέλων
+```text
+RISCV-Processor-MultiCycle/
+├── RTL/                 # Πηγαίος κώδικας Verilog
+│   ├── alu.v
+│   ├── calc.v
+│   ├── calc_enc.v
+│   ├── regfile.v
+│   ├── datapath.v
+│   └── top_proc.v
+├── Memory/              # Μοντέλα μνήμης και δεδομένα
+│   ├── DATA_MEMORY.v           (πρώην ram.v)
+│   ├── INSTRUCTION_MEMORY.v    (πρώην rom.v)
+│   └── rom_bytes.data          (κώδικας μηχανής)
+├── Testbenches/         # Αρχεία επαλήθευσης
+│   ├── calc_tb.v
+│   └── top_proc_tb.v
+├── Docs/                # Specs και Αναφορά
+│   ├── Assignment_Specifications.pdf
+│   └── Digital_Systems_Design_Report.pdf
+└── Simulations/         # Screenshots κυματομορφών
+    └── calculator_simulation_waveforms.png
