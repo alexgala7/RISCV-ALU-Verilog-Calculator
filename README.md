@@ -16,7 +16,7 @@ Integration of the ALU into a calculator circuit with a 16-bit accumulator.
 * **Interface:** Connection of inputs (switches) and the accumulator to the ALU using sign extension logic.
 * **Control:** Structural Verilog implementation (`calc_enc.v`) using pure logic gates to generate the `alu_op` signal.
 
-
+![Linear Regression](RISCV-Processor-MultiCycle/Simulations/calculator_simulation_waveforms.png)
 *Figure: Simulation waveform verifying the correct execution of arithmetic operations in the hardware calculator.*
 
 ### Exercise 3: Register File
