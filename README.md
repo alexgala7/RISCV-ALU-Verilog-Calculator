@@ -1,69 +1,89 @@
 # RISC-V Multi-Cycle Processor Design (Verilog)
 
-Αυτό το repository περιέχει την πλήρη σχεδίαση ενός **32-bit RISC-V συμβατού επεξεργαστή** σε Verilog HDL. Το project εξελίσσεται από τη σχεδίαση βασικών δομικών μονάδων (ALU, Register File) στην υλοποίηση ενός multi-cycle datapath και μιας Μηχανής Πεπερασμένων Καταστάσεων (FSM).
+This repository contains the full hardware implementation of a **32-bit RISC-V compatible processor** using Verilog HDL. The project progresses from designing basic building blocks (ALU, Register File) to implementing a multi-cycle datapath and a Finite State Machine (FSM) controller.
 
-## 📊 Επισκόπηση Εργασίας
+## 📊 Project Overview
 
-### Άσκηση 1: Arithmetic Logic Unit (ALU) 32-bit
-Σχεδίαση μιας ALU 32-bit με παραμετροποιημένη επιλογή λειτουργιών μέσω του σήματος `alu_op`.
-* **Λειτουργίες:** Υποστηρίζονται αριθμητικές πράξεις (ADD, SUB), λογικές (AND, OR, XOR), ολισθήσεις (SLL, SRL, SRA) και συγκρίσεις (SLT).
-* **Zero Flag:** Έξοδος 1-bit που υποδεικνύει αν το αποτέλεσμα είναι μηδέν (απαραίτητο για BEQ).
-* **Ιδιαιτερότητες:** Υλοποίηση προσημασμένης σύγκρισης και αριθμητικής ολίσθησης με μετατροπή τύπου δεδομένων.
+### Exercise 1: 32-bit Arithmetic Logic Unit (ALU)
+Implementation of a 32-bit ALU with parameterized operation selection via the `alu_op` signal.
+* **Operations:** Supports arithmetic (ADD, SUB), logical (AND, OR, XOR), shifts (SLL, SRL, SRA), and comparisons (SLT).
+* **Zero Flag:** A 1-bit output indicating if the result is zero (essential for BEQ instructions).
+* **Technical Details:** Signed comparison logic and arithmetic right shifts using signed type casting.
 
-### Άσκηση 2: Ψηφιακή Αριθμομηχανή (Calculator)
-Ενσωμάτωση της ALU σε ένα κύκλωμα αριθμομηχανής με συσσωρευτή (accumulator) 16-bit.
-* **Accumulator:** 16-bit καταχωρητής με σύγχρονο μηδενισμό (btnu) και ενημέρωση (btnd).
-* **Interface:** Σύνδεση εισόδων (switches) και συσσωρευτή στην ALU μέσω επέκτασης προσήμου (sign extension).
-* **Control:** Υλοποίηση συνδυαστικής λογικής (structural Verilog) στο `calc_enc.v` για την παραγωγή του `alu_op`.
+### Exercise 2: Digital Hardware Calculator
+Integration of the ALU into a calculator circuit with a 16-bit accumulator.
+* **Accumulator:** 16-bit register with synchronous reset (`btnu`) and update (`btnd`) triggers.
+* **Interface:** Connection of inputs (switches) and the accumulator to the ALU using sign extension logic.
+* **Control:** Structural Verilog implementation (`calc_enc.v`) using pure logic gates to generate the `alu_op` signal.
 
-![Calculator Simulation Waveforms](Simulations/calculator_simulation_waveforms.png)
-*Σχήμα: Κυματομορφή προσομοίωσης της αριθμομηχανής που επαληθεύει την ορθή λειτουργία των πράξεων.*
 
-### Άσκηση 3: Register File
-Σχεδίαση αρχείου 32 καταχωρητών (32-bit) για τον RISC-V.
-* **Θύρες:** Ταυτόχρονη ανάγνωση από δύο θύρες και εγγραφή σε μία.
-* **Register x0:** Hardwired τιμή 0, μη επιδεκτική αλλαγής.
-* **Προτεραιότητα Εγγραφής:** Μηχανισμός που επιτρέπει την άμεση προώθηση των δεδομένων εγγραφής στις εξόδους ανάγνωσης όταν οι διευθύνσεις ταυτίζονται.
+*Figure: Simulation waveform verifying the correct execution of arithmetic operations in the hardware calculator.*
 
-### Άσκηση 4: Datapath Σχεδίαση
-Σύνθεση των μονάδων σε μια ενιαία διαδρομή δεδομένων σύμφωνα με την αρχιτεκτονική RISC-V.
-* **Program Counter (PC):** Λογική ενημέρωσης PC+4 ή Branch Offset.
-* **Immediate Generation:** Υποστήριξη I, S, και B-type εντολών με κατάλληλη επέκταση προσήμου.
-* **Memory Interface:** Διασύνδεση με μνήμες δεδομένων και εντολών.
+### Exercise 3: Register File
+Design of a 32-entry (32-bit wide) Register File for the RISC-V architecture.
+* **Ports:** Dual asynchronous read ports and one synchronous write port.
+* **Register x0:** Hardwired to constant zero; remains unaffected by write operations.
+* **Write-First Logic:** Mechanism ensuring that write data is immediately available at the read ports when addresses match.
 
-### Άσκηση 5: Multi-cycle Control (FSM)
-Υλοποίηση του ελεγκτή 5 σταδίων (Instruction Fetch, Decode, Execute, Memory, Write-Back).
-* **Σήματα Ελέγχου:** Παραγωγή των PCSrc, ALUSrc, MemRead, MemWrite, RegWrite και ALUCtrl.
-* **Παρατήρηση:** Κατά την τελική προσομοίωση του ελεγκτή στο `top_proc.v`, εντοπίστηκαν ζητήματα στη διασύνδεση του WriteBackData και στην ενεργοποίηση του RegWrite, τα οποία επηρεάζουν την πλήρη ολοκλήρωση των εντολών LW/SW.
+### Exercise 4: Datapath Design
+Synthesis of individual modules into a unified data processing path based on the RISC-V architecture.
+* **Program Counter (PC):** Update logic for PC+4 or Branch Offset calculation.
+* **Immediate Generation:** Support for I, S, and B-type instructions with proper sign extension.
+* **Memory Interface:** Integration with instruction and data memory modules.
 
-[Image of a 5-stage FSM state diagram for a processor]
 
-## 🛠️ Υποστήριξη Εντολών
-Ο επεξεργαστής σχεδιάστηκε για να υποστηρίζει:
+
+### Exercise 5: Multi-cycle Control (FSM)
+Implementation of a 5-stage Finite State Machine controller (Instruction Fetch, Decode, Execute, Memory, Write-Back).
+* **Control Signals:** Generation of `PCSrc`, `ALUSrc`, `MemRead`, `MemWrite`, `RegWrite`, and `ALUCtrl`.
+* **Technical Note:** During system-level simulation in `top_proc.v`, connectivity issues were identified regarding the `WriteBackData` signal and `RegWrite` activation. These issues currently affect the full completion of LW/SW instructions.
+
+
+
+## 🛠️ Instruction Set Support
+The processor is designed to support the following instructions:
 * **R-Type:** ADD, SUB, AND, OR, XOR, SLT, SLL, SRL, SRA.
 * **I-Type:** ADDI, ANDI, ORI, XORI, SLTI, SLLI, SRLI, SRAI, LW.
 * **S-Type:** SW.
 * **B-Type:** BEQ.
 
-## 📂 Δομή Φακέλων
-```text
-RISCV-Processor-MultiCycle/
-├── RTL/                 # Πηγαίος κώδικας Verilog
-│   ├── alu.v
-│   ├── calc.v
-│   ├── calc_enc.v
-│   ├── regfile.v
-│   ├── datapath.v
-│   └── top_proc.v
-├── Memory/              # Μοντέλα μνήμης και δεδομένα
-│   ├── DATA_MEMORY.v           (πρώην ram.v)
-│   ├── INSTRUCTION_MEMORY.v    (πρώην rom.v)
-│   └── rom_bytes.data          (κώδικας μηχανής)
-├── Testbenches/         # Αρχεία επαλήθευσης
-│   ├── calc_tb.v
-│   └── top_proc_tb.v
-├── Docs/                # Specs και Αναφορά
-│   ├── Assignment_Specifications.pdf
-│   └── Digital_Systems_Design_Report.pdf
-└── Simulations/         # Screenshots κυματομορφών
-    └── calculator_simulation_waveforms.png
+
+
+## 📂 Repository Structure
+
+### RTL
+Core Verilog source files implementing the hardware logic:
+* **alu.v**: 32-bit Arithmetic Logic Unit.
+* **calc.v**: Top-level calculator module.
+* **calc_enc.v**: Structural logic for ALU operation encoding.
+* **regfile.v**: 32x32 Register File.
+* **datapath.v**: RISC-V Datapath wiring.
+* **top_proc.v**: Multi-cycle Processor Top and FSM.
+
+### Memory
+Memory models and machine code data used for simulation:
+* **DATA_MEMORY.v**: Data memory module (formerly `ram.v`).
+* **INSTRUCTION_MEMORY.v**: Instruction memory module (formerly `rom.v`).
+* **rom_bytes.data**: Hexadecimal machine code for processor execution.
+
+### Testbenches
+Verification files for simulation:
+* **calc_tb.v**: Testbench for the digital calculator (Ex. 2).
+* **top_proc_tb.v**: System-level testbench for the full processor (Ex. 5).
+
+### Simulations
+Verification assets:
+* **calculator_simulation_waveforms.png**: Timing diagram of the calculator's logic.
+
+### Docs
+Project documentation and reference material:
+* **Assignment_Specifications.pdf**: Original project requirements.
+* **Digital_Systems_Design_Report.pdf**: Detailed technical analysis and design report.
+
+## 🛠️ Tech Stack
+* **Language:** Verilog HDL
+* **Tools:** ModelSim / Vivado / Icarus Verilog
+* **Architecture:** RISC-V (RV32I Subset)
+
+---
+*Developed as part of the Digital Systems Design course, ECE AUTh, 2026.*
