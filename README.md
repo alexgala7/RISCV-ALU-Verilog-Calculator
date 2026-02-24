@@ -86,4 +86,4 @@ Project documentation and reference material:
 * **Architecture:** RISC-V (RV32I Subset)
 
 ---
-*Developed as part of the Digital Systems Design course, ECE AUTh, 2026.*
+*Developed as part of the Digital Systems Design course, ECE AUTh, 2025.*
